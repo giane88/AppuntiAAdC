@@ -44,7 +44,7 @@ Un esempio di sistema \emph{dual-issue} è mostrato in \figurename\,\ref{fig:dua
 \begin{figure}
 \centering
 \includegraphics[scale=0.5]{img/dualmips.png}
-\caption{Schema hardware per una pipeline dual-issue con una unità ALU/BR e una unità load/store}
+\caption{Schema hardware per una pipeline dual-issue con una unità ALU/BR e una unità load/store}\label{fig:dualmips}
 \end{figure}
 In pipeline di tipo multiple-issue il $CPI_{ideale}$ risulta essere $<1$ ad esempio considerando il caso ottimale di un processore \emph{2-issue} abbiamo che ad ogni ciclo di clock vengono completate 2 istruzioni questo significa che:
 $$IPC_{ideale} = 2; \\ CPI_{ideale} = 0.5$$
@@ -200,3 +200,56 @@ Prendiamo il caso di una load eseguita fuori ordine con una store precedente ed 
 Per un esempio completo si rimanda alle slide dell'insegnante per il funzionamento dell'algoritmo.
 \subsubsection{Tomasulo vs Scoreboard}
 Al contrario dello scoreboard l'algoritmo di Tomasulo ha una finestra di prelevamento delle istruzioni minore (5 vs 12) in entrambi i casi non si hanno hazard di tipo strutturale nel prelevamento delle istruzioni, nel caso di Tomasulo questi sono bloccati a livello di RS mentre nel caso dello Scoreboard a livello di FU. Tomasulo è più efficiente per quanto riguarda la risoluzione di WAW e di WAR che vengono risolti tramite renaming mentre per lo Scoreboard sono necessari alcuni stalli; inoltre, in Tomasulo il risultato di una FU è distribuito a tutte le altre tramite il Common Data Bus mentre nello scoreboard è necessario attendere che il risultato sia scritto nei registri di destinazione. Il controllo in Tomasulo è distribuito ed è possibile effettuare un loop unrolling al contrario dello Scoreboard. Tuttavia i limiti di Tomasulo risiedono nella sua complessità e alla limitazione delle prestazioni del COmmon Data Bus; inoltre il parallelismo è ridotto a causa dei salti.
+\subsection{Register Renaming}
+\subsubsection{Renaming implicito}
+Analizziamo ora un piccolo codice di esempio che rappresenta un ciclo
+\begin{verbatim}
+Loop:  	LD		F0	0	R1
+		MULTD	F4	F0	F2
+		SD		F4	0	R1
+		SUBI	R1	R1	#8
+		BNEZ	R1	Loop
+\end{verbatim}
+ed assumiamo che la moltiplicazione abbia una latenza di 4 cicli, che la prima volta che viene effettuata la load si abbia un overhead di 8 cicli (cache miss) mentre nelle successive la latenza sia di 1 ciclo (cache hit), infine, assumiamo che la branch prediction predica che il salto sia effettuato.\\
+Come abbiamo visto nel paragrafo precedente l'algoritmo di Tomasulo fornisce il \emph{register renaming} in modo implicito tramite le \emph{reservation station} le quali "bufferizzano" gli operandi delle istruzioni per evitare eventuali problemi di WAW e di WAR. Questo permette a iterazioni diverse di utilizzare registri fisici diversi (\textbf{dynamic loop unrolling}), inoltre, permette di sostituire i registri statici con dei puntatori dinamici che fanno in modo di incrementare praticamente la dimensione del register file. Questo permette alle istruzioni di procedere e, tramite l'uso della branch prediction di prelevare più istruzioni di iterazioni diverse.\\
+Per un esempio di questo meccanismo si rimanda alle slide della professoressa riportiamo di seguito solo il passaggio dell'algoritmo al ciclo di clock 14 (\figurename\,\ref{fig:ciclo14})nella quale si nota come sia stato possibile effettuare un loop unrolling e come tale loop venga gestito in modo implicito infatti le operazioni del primo loop hanno tutte come registro base $R1 = 80$ mentre il secondo loop abbia come registro base $R1 = 72$.\\
+\begin{figure}
+\centering
+\includegraphics[scale=0.5]{img/ciclo14.png}
+\caption{Algoritmo di Tomasulo all'istante 14}\label{fig:ciclo14}
+\end{figure}
+Il problema di questa tecnica è che necessita di prelevare le istruzioni \emph{in ordine} in quanto un prelevamento fuori ordine ci può portare ad avere WAR e RAW che in realtà non esistono. Tuttavia il meccanismo funziona bene nel caso di prelevamento di un unica istruzione. La situazione cambia completamente nel caso di prelevamento di istruzioni multiple in un singolo ciclo di clock, infatti, è necessario disporre di porte multiple  per la \emph{raname table} e dobbiamo essere in grado di effettuare il rename su diverse istruzioni contemporaneamente. Dobbiamo inoltre fornire istruzioni a più \emph{reservation station} nello stesso ciclo di clock e questo comporta l'utilizzo di 2x porte in lettura e 1x porte in scrittura. Il prelevamento delle istruzioni in sequenza è il vero collo di bottiglia nel caso di istruzioni multiple per singolo ciclo di clock.\\
+Il completamento fuori ordine riduce notevolmente la nostra possibilità di avere delle eccezioni \emph{precise} in quanto il register file può contenere risultati di istruzioni successive e magari non contenere risultati di istruzioni precedenti e non ancora completate.
+In questo contesto sarebbe necessario effettuare un \emph{rollback} del register file in modo da avere un'eccezione \emph{precisa} ovvero nella quale tutte le istruzioni precedenti a quella che ha generato l'eccezione hanno "committato" il loro risultato e nessuna istruzione successiva ha "committato" il risultato
+\subsubsection{Renaming esplicito}
+Come abbiamo appena visto tomasulo fornisce il renaming in modo implicito tramite l'utilizzo delle reservation station. Quello che vogliamo fare ora è capire come implementare un renaming dei registri in modo esplicito. Per fare questo innanzitutto dobbiamo tener conto che dobbiamo utilizzare un maggior numero di registri fisici rispetto a quelli specificati dall'ISA. Il principio chiave è quello di allocare una nuova destinazione fisica per ogni istruzione che scrive un risultato. Questa tecnica è molto simile alla trasformazione effettuata dal compilatore chiamata \emph{Static Single Assignment (SSA)} ma in questo caso viene effettuata dallo hardware. Con questa tecnica si rimuovono tutte le possibilità di avere WAR o WAW. In \figurename\,\ref{fig:rftoprf} vediamo come il \emph{Register File Fisico} sia molto più grande di quello standard, inoltre, notiamo la presenza di una tabella denominata \emph{Freelist} nella quale sono memorizzati i registri fisici che non sono utilizzati e che sono quindi \emph{liberi}. 
+\begin{figure}[htb]
+\centering
+\includegraphics[scale=0.5]{img/rftoprf.png}
+\caption{Associazione tra RF e RF fisico}\label{fig:rftoprf}
+\end{figure}
+Per implementare questo meccanismo è sufficiente tenere traccia dell'associazione dei registri tramite una \emph{tabella di traduzione} come mostrato in \figurename\,\ref{fig:translation}.
+\begin{figure}[htb]
+\centering
+\includegraphics[scale=0.5]{img/translation.png}
+\caption{Meccanismo di register renaming}\label{fig:translation}
+\end{figure}
+Quando un'istruzione deve scrivere un risultato in un registro esso viene sostituito da un nuovo registro preso dalla \emph{freelist}. Un registro torna a far parte della \emph{freelist} quando non è più usato da nessuna istruzione.\\
+I vantaggi di questa tecnica sono il disaccoppiamento del concetto di renaming da quello di scheduling, la pipeline è esattamente uguale a quella dello MIPS, con la possibilità di implementare scheduling dinamici (Tomasulo o Scoreboard) la possibilità di prelevare più istruzioni per singolo ciclo di clock; inoltre, è possibile utilizzare meccanismi di forwarding e bypassing. Un altro vantaggio è il fatto che, in caso di eccezione, è immediato ricostruire l'esatto stato al tempo del brekpoint in quanto basta solo effettuare la sostituzione dei valori della \emph{rename table}.
+\paragraph{Renaming in pratica}
+Quando un istruzione viene prelevata si rinominano tutti i registri relativi agli operandi, gli operandi vengono letti dal RF (reale o esteso) oppure via CDB. Alla fine dell'esecuzione un \emph{reorder buffer} forza un commit ordinato delle istruzioni senza però rinominare i risultati.\\
+Per effettuare queste operazioni sono necessarie alcune caratteristiche, prima fra tutti la disponibilità di una tabella di traduzione, un register file fisico molto più grande di quello ISA nel quale sia possibile capire quali sono i registri \emph{liberi}.\\
+Utilizzando il \emph{Register Renaming} possiamo semplificare lo scheduler Scoreboard i quattro stage che lo compongono diventano:
+\begin{description}
+\item[Issue:] preleva e decodifica le istruzioni, controlla eventuali hazard di tipo strutturale, alloca nuovi registri fisici per il risultato:
+\begin{itemize}
+\item Le istruzioni vengono prelevate nell'ordine del programma per verificare eventuali conflitti 
+\item Non si prelevano ulteriori istruzioni nel caso non vi siano registri fisici liberi.
+\item Si inserisce uno stallo fino a quando i conflitti strutturali non sono stati risolti.
+\end{itemize}
+\item[Read Operands:] Si attende fino a quando sono risolti eventuali conflitti RAW dopo di che si prosegue con la lettura degli operandi.
+\item[Execution:] Si eseguono le operazioni nelle unità funzionali specificate.
+\item[Write result:] I risultati vengono scritti nei registri.
+\end{description}
+Come si nota non si effettuano controlli per eventuali conflitti di tipo WAR o WAW in quanto risolti automaticamente dal register renaming.\\
+Per un esempio di esecuzione di uno Scoreboard con l'utilizzo del renaming esplicito si rimanda alle slide del corso.
