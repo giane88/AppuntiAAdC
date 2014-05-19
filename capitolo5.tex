@@ -1,0 +1,20 @@
+\section{Reorder Buffer}\label{capitolo5}
+Nei capitoli precedenti abbiamo visto come, sia Tomasulo che lo Scoreboard, prevedano il prelievo delle istruzioni in ordine ma che poi l'esecuzione e il completamento di tali istruzioni avvenga fuori ordine. Ovvero esiste un disaccoppiamento tra il prelevamento e l'esecuzione delle istruzioni. Un altro punto che abbiamo analizzato superficialmente è la risoluzione dei salti, infatti, noi facevamo affidamento sul fatto che il risultato del branch fosse controllato da un'operazione tra interi e che quindi fosse un operazione \emph{veloce}. Nel caso in cui, invece, il ciclo dipenda da un operazione più lenta come una moltiplicazione perdiamo tutti i nostri vantaggi come nel caso del codice seguente:
+\begin{verbatim}
+Loop:	LD 		F0	0	R1
+		MULTD	F4	F0	F2
+		SD		F4	0	R1
+		SUBI	R1	R1	#8
+		BNEZ	R1	Loop
+\end{verbatim}
+Il primo problema è nella predizione del salto, infatti, una corretta previsione diventa fondamentale per mantenere delle buone prestazioni. Oltre alla predizione sui salti l'architettura deve prevedere qualsiasi altro tipo di dipendenza come quella sui dati. Tutte queste predizioni sono effettuate dallo hardware; l'idea di base è quella di prelevare ed eseguire delle istruzioni dipendenti da un salto prima che il risultato di questo salto sia conosciuto, ovvero permettere alle operazioni di essere eseguite fuori ordine ma è necessario che esse siamo completate \emph{in ordine} tutto questo per prevenire che un'operazione venga \emph{committata} prima che tutte le sue precedenti non siano concluse. Questo significa che un'operazione deve essere committata solo quando essa non è più \emph{speculitiva}; il meccanismo che permette questo tipo di controllo è il \emph{ReOrder Buffer (ROB)} che mantiene il risultato delle istruzioni che hanno completato la loro esecuzione ma che non possono essere ancora committate.\\
+Il risultato di un salto è predetto e il programma viene eseguito come se la predizione fosse corretta (senza speculazione non si ha la fase di esecuzione). Per fare ciò però sono necessari dei meccanismi per manipolare i casi in cui la predizione è sbagliata. La speculazione hardware permette estende lo scheduling dinamico al di fuori dei blocchi base.\\
+La \emph{speculazione hardaware} combina tre idee:
+\begin{description}
+\item[Dynamic Branch Prediction:] che permette di selezionare quale ramo del salto dovrà essere eseguito prima che il risultato del salto sia conosciuto.
+\item[Speculazione:] che permette di eseguire delle istruzioni prima che le dipendenze di controllo siano eseguite.
+\item[Scheduling dinamico:] che supporta l'esecuzione fuori ordine ma il completamento in ordine.
+\end{description}
+Essenzialmente il modello basato sulla speculazione hardware è un modello basato sul \emph{data flow} ovvero, l'esecuzione di un'istruzione inizia quando i suoi operandi sono disponibili.\\
+La speculazione hardware è stata introdotta per estendere e supportare l'algoritmo di Tomasulo, in particolare per separare la fase di commit da quella di esecuzione è stato introdotto il \emph{Reorder Buffer}. 
+Il meccanismo del \emph{Reorder Buffer} è abbastanza semplice, le istruzioni vengono mantenute in un ordine di tipo FIFO esattamente come vengono prelevate, per ogni record del ROB si mantengono il valore del PC, del registro di destinazione, del risultato e l'eventuale stato dell'eccezione. Quando un'istruzione completa la sua esecuzione il risultato viene inserito nel corrispettivo campo del ROB
