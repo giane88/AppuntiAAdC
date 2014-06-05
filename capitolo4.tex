@@ -17,7 +17,7 @@ Un singolo pacchetto è in realtà un istruzione molto grande (64, 128 o più bi
 L'istruzione lunga è composta da una serie di campi chiamati \emph{slot} corrispondenti ognuno ad un'unità funzionale; ad esempio una \emph{5-issue VLIW} è un'istruzione lunga che contiene 5 operazioni ad esempio una operazione intera o di salto, due operazioni con la virgola e due operazioni di load/store. In questo modo la fase di decodifica si riduce alla decodifica di ogni istruzione come si può vedere nella \figurename\,\ref{fig:vliwarch}
 \begin{figure}
 \centering
-\includegraphics[scale=0.5]{img/vliwarch.png}
+\includegraphics[scale=0.4]{img/vliwarch.png}
 \caption{Architettura di una pipeline per VLIW}\label{fig:vliwarch}
 \end{figure}
 Sfortunatamente le operazioni VLIW non sono di tipo atomico, ovvero non avvengono in un solo ciclo di clock perciò la latenza delle operazioni deve essere nota al compilatore ad esempio:
@@ -39,7 +39,7 @@ Analiziamo ora alcuni esempi dei più diffusi processori VLIW presenti in commer
 \paragraph{STMicroelectronics ST200}
 Processore embedded pensato per l'utilizzo e la gestione dei media; esso è un processore VLIW di tipo cluster con quattro cluster eseguiti con un singolo PC. Ogni cluster ha 4 slot e può eseguire perciò 4 istruzioni contemporaneamente, 1 salto, 1 load/store, due moltiplicazioni. Ogni cluster ha a disposizione un banco di 64 registri.
 \paragraph{NXP Trimedia}
-\upercase{é} un processore per i media con cinque unità di esecuzione tali unità richiedono 15 porte in lettura e 5 in scrittura, ogni unità necessità di tre porte in lettura per leggere i due operandi e un \emph{guard operand} il quale condiziona l'esecuzione di ogni operazione.
+\uppercase{é} un processore per i media con cinque unità di esecuzione tali unità richiedono 15 porte in lettura e 5 in scrittura, ogni unità necessità di tre porte in lettura per leggere i due operandi e un \emph{guard operand} il quale condiziona l'esecuzione di ogni operazione.
 \paragraph{VLIW vs EPIC: Intel IA-64}
 Un evoluzione del VLIW è stato EPIC (\emph{Explicitly Parallel Instruction Computer}) che al contrario del VLIW permette una flessibilità del formato delle istruzioni inoltre indica quando un istruzione non può essere eseguita in parallelo alle successive.\\
 Una prima implementazione di questa tecnologia è stato \emph{Intel Itanium} il quale permetteva un alto parallelismo e una pipeline profonda con una frequenza di clock molto bassa 800MHz. Inoltre, aveva 128 registri a 64-bit per gli interi e 128 registri a 82 bit per i numeri con la virgola.\\
@@ -48,7 +48,7 @@ Un \emph{instructions group} è una sequenza di istruzioni consecutive senza dip
 Il processore Itanium ha una pipeline composta da 10 stadi come possiamo vedere in \figurename\,\ref{fig:itapipe}
 \begin{figure}
 \centering
-\includegraphics[scale=0.5]{img/itapipe.png}
+\includegraphics[scale=0.4]{img/itapipe.png}
 \caption{Stage della pipeline di un processore Itanium}\label{fig:itapipe}
 \end{figure}
 Come vediamo dalla \figurename\,\ref{fig:itapipe} possiamo raggruppare i diversi stage in quattro gruppi:
@@ -70,7 +70,7 @@ I processori Crusoe hanno a disposizione 5 unità funzionali:
 \end{itemize}
 \subsection{Code scheduling VLIW}
 L'obiettivo principale dello scheduling nei processori VLIW è quello di stabilire staticamente l'ordine di esecuzione delle istruzioni nel codice oggetto in modo che queste vengano eseguite in modo corretto ed efficiente.\\
-Il meccanismo base per schedulare le istruzioni in modo efficente è quello di dividere il codice in blocchi base a questo punto per ogni blocco base si costruisce un grafico delle dipendenze come quello mostrato in \figurename\,\ref{fig:depgra}
+Il meccanismo base per schedulare le istruzioni in modo efficente è quello di dividere il codice in blocchi base a questo punto per ogni blocco base si costruisce un grafico delle dipendenze come quello mostrato in \figurename\,\ref{fig:depgrap}
 \begin{figure}[htb]
 \centering
 \includegraphics[scale=0.5]{img/depgrap.png}
@@ -90,7 +90,7 @@ Lo scheduler in teoria dovrebbe programmare l'esecuzione di ogni operazione del 
 \subsection{List-based scheduling}
 In questo tipo di scheduling per ogni ciclo di clock viene selezionata un'istruzione da un \emph{ready set} che può essere inserita in uno degli slot. Un'istruzione si definisce \emph{ready} quando tutti i suoi predecessori sono già stati schedulati e tutti gli operandi necessari sono disponibili. All'inizio dello scheduling tutte le operazioni all'inizio del grafico sono inserite nel \emph{ready set} e ad ogni ciclo si cerca di schedulare tutte le istruzioni nel set nel caso più istruzioni siano presenti si schedula quella con la priorità maggiore.\\
 Per implementare questo meccanismo è necessario però tenere traccia di quali risorse sono occupate per fare questo si utilizza una \emph{Resource Reservation Table} ovvero una tabella che indica quali risorse sono occupate in un determinato istante di tempo.\\
-Un esempio di tale sistema è mostrato in \figurname\,\ref{fig:reservation}
+Un esempio di tale sistema è mostrato in \figurename\,\ref{fig:reservation}
 \begin{figure}[htb]
 \centering
 \includegraphics[scale=0.5]{img/reservation.png}
@@ -103,36 +103,36 @@ Le tecniche di \emph{global scheduling} espandono la ricerca del parallelismo al
 \paragraph{Loop unrolling}
 Il \emph{loop unrolling} è una tecnica di scheduling locale che permette al compilatore di incrementare la quantità di parallelismo disponibile in un basic block. Per fare ciò il compilatore replica il corpo di un loop diverse volte (dipende dal fattore di \emph{unrolling}) sistemando poi il codice di terminazione del ciclo. Per effettuare questa operazione però il compilatore deve prima testare l'indipendenza tra le diverse iterazioni.\\
 Il \emph{loop unrolling} permette di incrementare il numero di operazioni effettuate ad ogni ciclo minimizzando però il numero di salti da effettuare; inoltre, aumentando il numero di operazioni si aumenta la lunghezza del blocco base permettendo al compilatore di effettuare uno scheduling più efficiente. Gli svantaggi di questa tecnica sono però l'aumento della dimensione del codice e il numero di registri richiesto per l'esecuzione.\\
-Un esempio di loop unrolling è mostrato nelle \figurname\,\ref{fig:unroll1} e \figurname\,\ref{fig:unroll2} dove si mostra un unrolling di fattore di srotolamento di 2.
+Un esempio di loop unrolling è mostrato nelle \figurename\,\ref{fig:unroll1} e \figurename\,\ref{fig:unroll2} dove si mostra un unrolling di fattore di srotolamento di 4.
 \begin{figure}[htb]
 \centering
 \subfigure[loop base]{
-\label{fig:unroll1}
 \includegraphics[scale=0.4]{img/unroll1.png}
+\label{fig:unroll1}
 }
 \subfigure[loop unrolled]{
-\label{fig:unroll2}
 \includegraphics[scale=0.4]{img/unroll2.png}
+\label{fig:unroll2}
 }
-\caption{Esempio di unrolling con fattore 2}
+\caption{Esempio di unrolling con fattore 4}
 \end{figure}
 \paragraph{Loop-carried dependences}
 Il loop-carried è una tecnica incentrata sull'analisi delle dipendenze presenti tra gli operandi all'interno delle diverse interazioni di un loop. Si hanno delle dipendenze tra due interazioni di un loop quando un valore in una interazioni dipende da un secondo valore prodotto in una interazione precedente. Un esempio di questa dipendenza è dato dal seguente codice:
 \begin{verbatim}
 for (i = 6; i < 100; i++)
 {
-	Y[i] = Y[i-5] + Y[i];
+    Y[i] = Y[i-5] + Y[i];
 }
 \end{verbatim}
 In questo caso ogni iterazione dipende dalla 5 iterazione precedente e quindi le iterazioni \texttt{i, i+1, i+2, i+3, i+4} sono indipendenti (\texttt{i+5} dipende dall'iterazione \texttt{i}). Trovando il fattore di indipendenza si può trovare effettuare un \emph{unrolling} del ciclo come segue:
 \begin{verbatim}
 for (i = 6; i < 100; i=i+5)
 {
-	Y[i] = Y[i-5] + Y[i];
-	Y[i+1] = Y[i-4] + Y[i+1];
-	Y[i+2] = Y[i-3] + Y[i+2];
-	Y[i+3] = Y[i-2] + Y[i+3];
-	Y[i+4] = Y[i-1] + Y[i+4];
+    Y[i] = Y[i-5] + Y[i];
+    Y[i+1] = Y[i-4] + Y[i+1];
+    Y[i+2] = Y[i-3] + Y[i+2];
+    Y[i+3] = Y[i-2] + Y[i+3];
+    Y[i+4] = Y[i-1] + Y[i+4];
 }
 \end{verbatim}
 Si riesce così ad estendere il blocco base ma il fattore di \emph{unrolling} non può essere maggiore di 5.
@@ -146,8 +146,8 @@ In questo caso "sbucciamo" il primo ciclo delle ultime due iterazioni e lo fondi
 \begin{verbatim}
 for (i = 0; i < 100; i++)
 {
-	b[i] = b[i-2] + c;
-	a[i] = a[i] * 2;
+    b[i] = b[i-2] + c;
+    a[i] = a[i] * 2;
 }
 b[100] = b[98] + c;
 b[101] = b[99] + c;
@@ -166,21 +166,21 @@ Prendiamo in esempio il seguente loop dove sono presenti delle dipendenze intern
 \begin{verbatim}
 for(i = 0; i < 100; i++)
 {
-	A[i] = B[i];
-	A[i] = A[i]+1;
-	C[i] = A[i];
+    A[i] = B[i];
+    A[i] = A[i]+1;
+    C[i] = A[i];
 }
 \end{verbatim}
 In \figurename\,\ref{fig:iteration} vediamo lo svolgimento delle diverse iterazioni; i riquadri nella figura indicano il nuovo ciclo che si viene a creare che viene mostrato in \figurename\,\ref{fig:newcicle}. Il vantaggio di questa tecnica è che consuma meno spazio del loop unrolling, in quanto non vi è la necessità di duplicare il codice. Si riempe e si svuota la pipe una volta sola per ogni loop al contrario del caso del loop unrolling che si riempe e si svuota ad ogni interazione. Infine tale tecnica può essere associata anche al loop unrolling per incrementarne le prestazioni.
 \begin{figure}[htb]
 \centering
-\includegraphics[scale=0.5]{img/iteration.png}
-\caption{Svolgimento delle diverse iterazioni}\label{fig:iterazioni}
+\includegraphics[scale=0.4]{img/iteration.png}
+\caption{Svolgimento delle diverse iterazioni}\label{fig:iteration}
 \end{figure}
 \begin{figure}[htb]
 \centering
-\includegraphics[scale=0.5]{img/newcile.png}
-\caption{Nuovo codice che implementa il loop}\label{fig:newcile}
+\includegraphics[scale=0.4]{img/newcicle.png}
+\caption{Nuovo codice che implementa il loop}\label{fig:newcicle}
 \end{figure}
 \paragraph{Trace scheduling}
 I sistemi di local scheduling funzionano solo quando i loop contengono un singolo basic block, quando i corpi dei loop contengono dei flussi di controllo allora è necessario espandere lo scheduling attraverso i diversi basic block tramite tecniche di \emph{global schedulig}.\\
@@ -189,14 +189,14 @@ Il \emph{trace scheduling} è la prima tecnica che analizzeremo e consiste nel t
 Questa è una tecnica di ottimizzazione del \emph{trace scheduling} che consiste nel creare un \emph{superblocco} formato da diversi blocchi base con un unico punto d'entrata e molteplici flussi di controllo in uscita come mostrato in \figurename\,\ref{fig:superblock}.
 \begin{figure}[htb]
 \centering
-\includegraphics[scale=0.5]{img/superblock.png}
+\includegraphics[scale=0.4]{img/superblock.png}
 \caption{Realizzazione di un superblocco}\label{fig:superblock}
 \end{figure}
 \paragraph{Hardware support}
 Tutte le tecniche viste fino ad ora si applicano quando il comportamento dei salti è molto predicibile altrimenti il controllo delle dipendenze limita di molto il parallelismo. Per aggirare questo problema possiamo estendere il set di istruzioni per includere delle istruzioni condizionali; utilizzare la speculazione del compilatore con il supporto dell'hardware per permettere di creare codice speculativo mantenendo il comportamento delle eccezioni.\\
 Un esempio è \emph{l'esecuzione condizionale} che utilizza un particolare tipo di istruzione come quella seguente:
 \begin{verbatim}
-(p)		op Rd, R1, R2
+(p)     op Rd, R1, R2
 \end{verbatim}
 dove \texttt{p} è un predicato booleano che condiziona l'operazione \texttt{op}, infatti, \texttt{op} viene \emph{committata} soltanto se \emph{p} risulta \emph{vera}.\\
 Avendo effettuato queste modifiche possiamo a questo punto modificare il codice tramite delle \emph{if-conversion} che trasformano i salti in sequenze di istruzioni condizionali e le dipendenze di controllo si trasformano in dipendenze sui dati eliminando così i salti. I vantaggi sono l'eliminazione dei problemi di \emph{miss-prediction} e l'aumento delle dimensione dei basic block. Questa soluzione diventa efficente se le predizione errate e quindi la loro penalità è considerevole e se i salti sono sbilanciati e la parte eseguita più frequentemente è quella più lunga.
