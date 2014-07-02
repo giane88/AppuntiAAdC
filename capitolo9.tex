@@ -1,0 +1,108 @@
+\section{Analisi delle performance}\label{capitolo9}
+Nei capitoli precedenti abbiamo visto alcune tecniche per migliorare le performance dei processori, ora vogliamo valutare quantitativamente questo miglioramento analizzando caso per caso le diverse tecniche.
+Cosa significa tuttavia misurare un miglioramento? esistono diversi aspetti da considerare, ad esempio se consideriamo il costo dobbiamo tener presente il rapporto costo/prestazioni, se consideriamo il design di un sistema dobbiamo misurare il miglioramento delle prestazioni rispetto all'aumento di costo sia in termini monetari che di superficie di silicio.\\
+Prima di tutto però dobbiamo valutare che cosa significa \emph{performance}, possiamo considerare due aspetti:
+\begin{itemize}
+\item Il \textbf{tempo di esecuzione} ovvero il tempo necessario per compiere un lavoro.
+\item Il \textbf{throughput} ovvero il numero di lavori completati nell'unità di tempo.
+\end{itemize}
+Infine dobbiamo avere un metodo di paragone per confrontare due soluzioni diverse, tale metodo è dato da:
+$$X \ is \ n\% \ piu \ veloce \ di \ Y = \frac{tempo \ esecuzione \ (y)}{tempo \ esecuzione \ (x)} = 1 + \frac{n}{100}$$
+\subsection{Legge di Amdahl}
+Secondo la legge di Amdahl l'idea di base è quella velocizzare le operazioni più comuni, più precisamente
+\begin{center}
+\textit{Il miglioramento delle performance dato dall'uso di qualche modulo di esecuzione più veloce è limitato alla frazione di di tempo nella quale questo modulo viene utilizzato}
+\end{center}
+Considerando la \textbf{$Frazione_E$} come la frazione di tempo di computazione nella macchina originale che può essere velocizzato e lo \textbf{$SpeedUp_E$} come il miglioramento di prestazioni dovuto al nuovo modulo.
+$$SpeedUp(E) = \frac{ExTime \ w/o E}{ExTime \ w/ E} = \frac{Performance \ w/ E}{Performance \ w/o E}$$
+Supponendo che il modulo \emph{E} migliori una frazione \emph{F} del lavoro di un fattore \emph{S} mentre il resto del processo non ne viene influenzato allora abbiamo
+$$ExTime(with \ E) = ((1-F)+F/S) \times ExTime(without \ E)$$
+$$SpeedUp(with \ E) = \frac{1}{(1-F) + F/S}$$
+\subsection{Analisi delle performance in un processore pipelined}
+Nel caso di processore con pipeline abbiamo che viene incrementato il \emph{throughtput} delle istruzioni ma non viene ridotto il tempo di esecuzione della singola istruzione, anzi molte volte è leggermente incrementato a causa del bilanciamento degli stage della pipeline
+$$IC = Instruction \ Count$$
+$$\# \ Clock \ Cycle = IC + \# \ Stalli + 4$$
+$$CPI = Clock \ per \ Istruzione = \# \ Clock \ Cycle / IC = (IC + \# \ Stalli + 4) /IC$$
+$$MIPS = \frac{f_{clock}}{(CPI * 10^6)}$$
+Nel caso di un ciclo composto da \textbf{m} istruzioni il quale compie \textbf{n} iterazioni e richiede \textbf{k} stalli per iterazione abbiamo che per ogni iterazione:
+$$IC_{per\_iter} = m$$
+$$\# \ Clock \ Cycle_{per\_iter} = IC_{per\_iter} + \# \ Stalli_{per\_iter} + 4$$
+$$CPI_{per\_iter} = (IC_{per\_iter} + \# \ Stalli_{per\_iter} + 4) /IC_{per\_iter}= (m + k +4) / m$$
+$$MIPS_{per\_iter} = \frac{f_{clock}}{(CPI_{per\_iter} * 10^6)}$$
+Analizzando asintoticamente le formule precedenti abbiamo che:
+$$IC_{AS} = m * n$$
+$$\# \ Clock \ Cycle_{AS} = IC_{AS} + \# \ Stalli_{AS} + 4$$
+$$\begin{array}{rcl}
+CPI_{AS} & = & \lim_{n \to \infty} (IC_{AS} + \# \ Stalli_{AS} + 4) /IC_{AS} \\
+& = & \lim_{n \to \infty}(m*n + k*n +4) / m*n \\
+& = & (m + k) / m
+\end{array}
+$$
+$$MIPS_{AS} = \frac{f_{clock}}{(CPI_{AS} * 10^6)}$$
+Il \emph{CPI} ideale in un processore con pipeline dovrebbe essere uguale a \emph{1} ma gli stalli causano un degradamento delle performace otteniamo così:
+$$\begin{array}{rcl}
+Ave. \ CPI & = & CPI_{ideal} + Pipe \ Stall \ Cycle \ per \ Instruction \\
+ & = & 1 + Pipe \ Stall \ Cycle \ per \ Instruction 
+\end{array}$$
+Il numero di stalli per istruzione dipende da \emph{hazard strutturali} + \emph{hazard sui dati} + \emph{hazard di controllo} + \emph{stalli per accedere alla memoria}
+Possiamo misurare il miglioramento dato dalla pipeline come:
+$$SpeedUp_{pipeline} = \frac{Ave. \ Exec. \ Time \ Unpipelined}{Ave. \ Exec. \ Time \ Pipelined}$$
+$$ = \frac{Ave. \ CPI \ Unp.}{Ave. \ CPI \ Pipe} \times \frac{Clock \ Cycle \ Unp.}{Clock \ Cycle \ Pipe}$$
+Ignorando l'overhead sul periodo di clock introdotto dalla pipeline e assumendo che gli stage siano perfettamente bilanciati allora il periodo di clock dei due processori può ritenersi uguale così l'ultima formula diventa:
+$$SpeedUp_{pipeline} = \frac{Ave. \ CPI \ Unp.}{1 + Pipe \ Stall \ Cycle \ per \ Instruction}$$
+Supponendo nel caso più semplice che le istruzioni richiedano tutte lo stesso numero di cicli per essere eseguite il quale è uguale al numero di stage della pipeline anche chiamato \emph{pipeline depth} abbiamo che:
+$$SpeedUp_{pipeline} = \frac{Pipeline \ Depth}{1 + Pipe \ Stall \ Cycle \ per \ Instruction}$$
+Vediamo come nel caso non vi siano stalli si può aumentare il throughput del sistema semplicemente aumentando la profondità della pipeline.\\
+Nel caso di salti abbiamo che lo speedup del sistema è dato da:
+$$SpeedUp_{pipeline} = \frac{Pipeline \ Depth}{1 + Branch \ Freq. \times Branch \ Penality}$$
+\subsection{Analisi delle performance nelle gerarchie di memoria}
+Prima di iniziare l'analisi delle performance reintroduciamo alcune definizioni già viste:
+\begin{description}
+\item[Hit:] si ha quando un dato viene trovato in un blocco di memoria del livello più alto.
+\item[Hit rate:] numero di accessi a memoria che trovano il dato rispetto al numero totale di accessi
+$$Hit \ Rate = \frac{\# / hits}{\# \ memory \ accesses}$$
+\item[Hit time:] tempo per accedere ad un dato che si trova nel livello più alto della gerarchia compreso il tempo per decidere se esso si trova in tale livello.
+\item[Miss:] si ha quando il dato deve essere recuperato da un livello più basso.
+\item[Miss Rate:] numero di accessi a memoria che non trovano il dato nel livello più alto della gerarchia rispetto al numero di accessi totali.
+$$Miss \ Rate = \frac{\# / misses}{\# \ memory \ accesses}$$
+\item[$Miss \ Rate + Hit \ Rate = 1$]
+\item[Miss Penality:] tempo necessario per accedere al livello più basso e rimpiazzare il blocco nel livello più alto
+\item[Miss Time:]
+$$Miss \ Time = Hit \ Time + Miss \ Penality$$
+\item[$Hit \ Time << Miss \ Penality $]
+\end{description}
+Definiamo infine il tempo medio di accesso come:
+$$AMAT = Hit \ Rate * Hit \ Time + Miss \ Rate * Miss \ Time$$
+dalle formule precedenti possiamo semplificare la formula del tempo medio di accesso come :
+$$AMAT = Hit \ Time + Miss \ Rate * Miss \ Penality$$
+Volendo valutare quale impatto hanno le gerarchie di memoria sul tempo di esecuzione di un programma possiamo definire il tempo di esecuzione come:
+$$CPU_{time} = (CPU \ exec \ cycles+ Memory \ Stall \ Cycles) \times T_{CLK}$$
+dove:
+\begin{description}
+\item[$T_{CLK}$:] periodo di tempo del clock
+\item[$CPU_{exec-cycles}$:] $IC \times CPI_{exec}$
+\item[$IC$:] Instruction count
+\item[$Memory \ stall \ cycle$:] $IC \times Miss \ per \ instr \times Miss \ penality$
+\end{description}
+A questo punto possiamo riscrivere la precedente equazione come:
+$$CPU_{time} = IC \times (CPI_{exec} + Miss \ per \ instr \times Miss \ penality) \times T_{CLK}$$
+dove 
+$$Miss \ per \ instr = Memory \ Access \ Per \ Instrunction \times Miss \ Rate$$
+$$CPU_{time} = IC \times (CPI_{exec} + MAPI \times Miss \ Rate \times Miss \ penality) \times T_{CLK}$$
+Nel caso ideale in cui abbiamo tutti hit la formula si riduce:
+$$CPU_{time} = IC \times CPI_{exec} \ times T_{CLK}$$
+nel caso in cui invece prendiamo in considerazione un sistema senza cache:
+$$CPU_{time} = IC \times (CPI_{exec} + MAPI \times Miss \ penality) \ times T_{CLK}$$
+Tenendo in considerazione tutti i tipi di stalli durante un esecuzione abbiamo 
+$$CPU_{time} = IC \times (CPI_{exec} + Stalls \ per \ Instr. + MAPI \times Miss \ Rate \times Miss \ penality) \times T_{CLK}$$
+Analizziamo ora i vantaggi di avere più livelli di cache, il tempo medio di accesso è dato da:
+$$AMAT = Hit \ Time_{L1} + Miss \ Rate_{L1} * Miss \ Penality_{L1}$$
+$$Miss \ Penality_{L1} = Hit \ Time_{L2} + Miss \ Rate_{L2} * Miss \ Penality_{L2}$$
+Combinando queste due equazioni otteniamo:
+$$AMAT = Hit \ Time_{L1} + Miss \ Rate_{L1} \times (Hit \ Time_{L2} + Miss \ Rate_{L2} \times Miss \ Penality_{L2})$$
+Introducendo il concetto di \emph{global miss} (vedi \chaptername\,\ref{capitolo6})
+$$Miss \ Rate _{L1L2} = Miss \ Rate_{L1} \ time Miss \ Rate_{L2}$$
+Riscriviamo così l'equazione del tempo medio di accesso come: 
+$$AMAT = Hit \ Time_{L1} + Miss \ Rate_{L1} \times Hit \ Time_{L2} + Miss \ Rate_{L1L2} \times Miss \ Penality_{L2}$$
+Il tempo di esecuzione diventa:
+$$CPU_{time} = IC \times (CPI_{exec} + MAPI \times MR_{L1} \times HT_{L2}+ MAPI \times MR_{L1L2} \times MP_{L2}) \times T_{CLK}$$

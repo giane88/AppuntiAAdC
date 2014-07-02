@@ -85,10 +85,10 @@ Le istruzioni di salto condizionato sono nel formato \emph{I-Format}. La suddivi
 \item[op] identifica l'istruzione di tipo branch condizionale
 \item[rs] identifica il primo registro da comparare
 \item[rd] identifica il secondo registro da comparare
-\item[address] identifica l'offsett rispetto al PC che corrisponde all'indirizzo dell'etichetta
+\item[address] identifica l'offset rispetto al PC che corrisponde all'indirizzo dell'etichetta
 \end{description}
 Per quanto riguarda il salto incondizionato il funzionamento è molto più semplice, quando si raggiunge l'istruzione di salto il PC punta direttamente all'istruzione indicata dall'etichetta. Tale semplicità si rispecchia nella struttura dell'istruzione che in questo caso è di tipo \emph{J-Format}. 
-Lo pseudocodice assembly dell'istruzione di salto è:
+Lo pseudo-codice assembly dell'istruzione di salto è:
 \begin{verbatim}
 j	L1		#go to L1
 jr	$s1		#go to add. contenuto in $1
@@ -130,7 +130,7 @@ Il perché di questa divisione lo si capisce molto facilmente dallo schema in \f
 \subsubsection{Esecuzione delle istruzioni}
 Vediamo ora come possono essere implementate le diverse istruzione in ambiente MIPS. Tutte le istruzioni possono essere implementate suddividendo l'esecuzione in cinque fasi distinte:
 \begin{enumerate}
-\item \textbf{Instruction Fetch Cycle:} durante questo ciclo viene inviato il contenuto del \emph{Program Counter} all'\emph{Instruction Memory} e viene prelevata l'istruzione corrispondente. Successivamente viene aggiornato il PC perchè punti alla prossima istruzione aggiungendo 4 al valore attuale (le istruzioni sono di 4 bytes)
+\item \textbf{Instruction Fetch Cycle:} durante questo ciclo viene inviato il contenuto del \emph{Program Counter} all'\emph{Instruction Memory} e viene prelevata l'istruzione corrispondente. Successivamente viene aggiornato il PC perché punti alla prossima istruzione aggiungendo 4 al valore attuale (le istruzioni sono di 4 bytes)
 \item \textbf{Instruction Decode and Register Read Cycle:} in questo ciclo si decodifica l'istruzione corrente e si leggono dal \emph{Register File} i registri necessari corrispondenti ai registri specificati nei campi dell'istruzione. Si fa inoltre l'estensione del segno nel caso sia necessario.
 \item \textbf{Execution Cycle:} In questo ciclo la ALU effettua le operazioni sugli elementi che sono stati preparati nel ciclo precedente. In base alle istruzioni la ALU esegue le seguenti operazioni
 \begin{itemize}
@@ -256,7 +256,7 @@ Come vediamo dall'esempio qui sopra e dalla sua esecuzione in \figurename\,\ref{
 \end{figure}
 Esistono diversi meccanismi per far si che queste dipendenze vengano soddisfatte, le principali si possono suddividere in due categorie:
 \begin{itemize}
-\item \textbf{Tecniche di compilazione:} in questa categoria rientra il re-scheduling delle operazioni che connsiste nell'inserire istruzioni indipendenti tra le istruzioni correlate in modo da permettere il calcolo dei valori necessari; nel caso non sia possibile inserire altre operazioni il compilatore inserisce delle \texttt{nop} ovvero delle operazioni che non fanno nulla \emph{no operation}
+\item \textbf{Tecniche di compilazione:} in questa categoria rientra il re-scheduling delle operazioni che consiste nell'inserire istruzioni indipendenti tra le istruzioni correlate in modo da permettere il calcolo dei valori necessari; nel caso non sia possibile inserire altre operazioni il compilatore inserisce delle \texttt{nop} ovvero delle operazioni che non fanno nulla \emph{no operation}
 \item \textbf{Tecniche hardware:} in questa categoria rientrano la possibilità di inserire delle \emph{bubbles} o degli stalli oppure le tecniche di \emph{Data Forwarding} e di \emph{Bypassing}
 \end{itemize}
 Vediamo innanzi tutto un esempio di inserimento di \texttt{nop} in \figurename\,\ref{fig:nop}
@@ -265,7 +265,7 @@ Vediamo innanzi tutto un esempio di inserimento di \texttt{nop} in \figurename\,
 \includegraphics[scale=0.45]{img/nop.png}
 \caption{Esempio di uso \texttt{nop}}\label{fig:nop}
 \end{figure}
-Come vediamo l'inserimento di nop perggiora lo speedup ideale, cosa che invece non succede se si applicano le tecniche di re-scheduling in quanto non vengono inserite istruzioni inutili nell'esecuzione  delle istruzioni ma viene modificato semplicemente l'ordine nel quale vengono eseguite.\\
+Come vediamo l'inserimento di nop peggiora lo speedup ideale, cosa che invece non succede se si applicano le tecniche di re-scheduling in quanto non vengono inserite istruzioni inutili nell'esecuzione  delle istruzioni ma viene modificato semplicemente l'ordine nel quale vengono eseguite.\\
 Il caso di inserimento di stalli è molto simile a quello di inserimento delle nop la differenza sta nel fatto che si ferma l'esecuzione dell'istruzione dipendente il tempo necessario affinché l'istruzione in esecuzione renda disponibile il dato come vediamo in \figurename\,\ref{fig:stall}, anche in questo caso abbiamo un peggioramento dello speedup ideale.
 \begin{figure}[htb]
 \centering
